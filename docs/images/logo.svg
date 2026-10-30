@@ -1,0 +1,201 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <clipPath id="squircle-clip">
+      <rect x="24" y="24" width="976" height="976" rx="220" />
+    </clipPath>
+
+    <linearGradient id="cyan-glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f5ff" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+
+    <linearGradient id="amber-ear" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+
+    <filter id="subtle-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#000000" flood-opacity="0.14" />
+    </filter>
+  </defs>
+
+  <!-- Luxury White Squircle Container -->
+  <rect x="24" y="24" width="976" height="976" rx="220" fill="#ffffff" stroke="#e2e8f0" stroke-width="6" />
+
+  <g clip-path="url(#squircle-clip)">
+    <!-- Centered Architectural Composition (512, 512) -->
+    <g transform="translate(512, 512)" filter="url(#subtle-shadow)">
+
+      <!-- Hexagonal Architectural Gateway Frame -->
+      <polygon points="
+        0,-390
+        338,-195
+        338,195
+        0,390
+        -338,195
+        -338,-195
+      " fill="none" stroke="#0f172a" stroke-width="38" stroke-linejoin="round" />
+
+      <!-- Inner Precision Telemetry Ring -->
+      <polygon points="
+        0,-355
+        307,-177
+        307,177
+        0,355
+        -307,177
+        -307,-177
+      " fill="none" stroke="#00f5ff" stroke-width="4" opacity="0.45" stroke-dasharray="16, 12" />
+
+      <!-- 100% Watertight Solid Base Silhouette (Zero-Leak Protection) -->
+      <path d="
+        M 0,-320
+        L 65,-275 L 125,-305 L 145,-240 L 210,-245 L 215,-175 L 275,-165 L 255,-95
+        L 295,-65 L 260,-5 L 285,50 L 235,95 L 245,155 L 190,195 L 175,250
+        L 115,270 L 65,305 L 0,315
+        L -65,305 L -115,270 L -175,250 L -190,195 L -245,155 L -235,95
+        L -285,50 L -260,-5 L -295,-65 L -255,-95 L -275,-165 L -215,-175
+        L -210,-245 L -145,-240 L -125,-305 L -65,-275 Z
+      " fill="#080c14" />
+
+      <!-- ================= ORIGAMI HEDGEHOG CROWN & SPIKES ================= -->
+      <!-- Center Crown Spine -->
+      <polygon points="0,-320 45,-230 0,-180" fill="#475569" />
+      <polygon points="0,-320 -45,-230 0,-180" fill="#1e293b" />
+
+      <!-- Crown Flank Spines -->
+      <polygon points="125,-305 45,-230 110,-185" fill="#334155" />
+      <polygon points="125,-305 110,-185 145,-240" fill="#1e293b" />
+      <polygon points="-125,-305 -45,-230 -110,-185" fill="#1e293b" />
+      <polygon points="-125,-305 -110,-185 -145,-240" fill="#0f172a" />
+
+      <!-- ALERT HEDGEHOG EARS (Warm Amber Geometric Facets) -->
+      <polygon points="210,-245 145,-240 165,-160" fill="url(#amber-ear)" />
+      <polygon points="210,-245 165,-160 215,-175" fill="#b45309" />
+      <polygon points="145,-240 165,-160 110,-185" fill="#d97706" />
+
+      <polygon points="-210,-245 -145,-240 -165,-160" fill="url(#amber-ear)" />
+      <polygon points="-210,-245 -165,-160 -215,-175" fill="#b45309" />
+      <polygon points="-145,-240 -165,-160 -110,-185" fill="#92400e" />
+
+      <!-- Lateral Protective Spines Tier 1 -->
+      <polygon points="275,-165 215,-175 205,-95" fill="#334155" />
+      <polygon points="275,-165 205,-95 255,-95" fill="#1e293b" />
+      <polygon points="-275,-165 -215,-175 -205,-95" fill="#1e293b" />
+      <polygon points="-275,-165 -205,-95 -255,-95" fill="#0f172a" />
+
+      <!-- Lateral Protective Spines Tier 2 -->
+      <polygon points="295,-65 255,-95 215,-20" fill="#475569" />
+      <polygon points="295,-65 215,-20 260,-5" fill="#1e293b" />
+      <polygon points="-295,-65 -255,-95 -215,-20" fill="#1e293b" />
+      <polygon points="-295,-65 -215,-20 -260,-5" fill="#0f172a" />
+
+      <!-- Lateral Protective Spines Tier 3 -->
+      <polygon points="285,50 260,-5 195,55" fill="#334155" />
+      <polygon points="285,50 195,55 235,95" fill="#1e293b" />
+      <polygon points="-285,50 -260,-5 -195,55" fill="#1e293b" />
+      <polygon points="-285,50 -195,55 -235,95" fill="#0f172a" />
+
+      <!-- Lower Flank Spines -->
+      <polygon points="245,155 235,95 165,145" fill="#1e293b" />
+      <polygon points="245,155 165,145 190,195" fill="#0f172a" />
+      <polygon points="-245,155 -235,95 -165,145" fill="#1e293b" />
+      <polygon points="-245,155 -165,145 -190,195" fill="#0b0f19" />
+
+      <!-- Base Paws & Support Facets -->
+      <polygon points="190,195 175,250 125,205" fill="#334155" />
+      <polygon points="175,250 115,270 105,215" fill="#1e293b" />
+      <polygon points="115,270 65,305 55,245" fill="#1e293b" />
+      <polygon points="65,305 0,315 0,255" fill="#0f172a" />
+
+      <polygon points="-190,195 -175,250 -125,205" fill="#1e293b" />
+      <polygon points="-175,250 -115,270 -105,215" fill="#0f172a" />
+      <polygon points="-115,270 -65,305 -55,245" fill="#1e293b" />
+      <polygon points="-65,305 0,315 0,255" fill="#0b0f19" />
+
+      <!-- ================= INNER FACE & SHIELD MESH ================= -->
+      <!-- Forehead Keystone Plate -->
+      <polygon points="0,-180 55,-130 0,-60" fill="#475569" />
+      <polygon points="0,-180 -55,-130 0,-60" fill="#334155" />
+
+      <polygon points="0,-180 45,-230 110,-185 55,-130" fill="#334155" />
+      <polygon points="0,-180 -45,-230 -110,-185 -55,-130" fill="#1e293b" />
+
+      <!-- Temples -->
+      <polygon points="110,-185 165,-160 135,-85 55,-130" fill="#475569" />
+      <polygon points="-110,-185 -165,-160 -135,-85 -55,-130" fill="#1e293b" />
+
+      <!-- Cheeks -->
+      <polygon points="165,-160 205,-95 165,-25 135,-85" fill="#334155" />
+      <polygon points="-165,-160 -205,-95 -165,-25 -135,-85" fill="#1e293b" />
+
+      <!-- Mid Cheeks -->
+      <polygon points="135,-85 165,-25 120,35 60,-15" fill="#475569" />
+      <polygon points="-135,-85 -165,-25 -120,35 -60,-15" fill="#1e293b" />
+
+      <!-- Outer Flank Plates -->
+      <polygon points="165,-25 215,-20 195,55 120,35" fill="#1e293b" />
+      <polygon points="-165,-25 -215,-20 -195,55 -120,35" fill="#0f172a" />
+
+      <!-- Central Bridge & Brow -->
+      <polygon points="0,-60 55,-130 50,-80 0,-30" fill="#64748b" />
+      <polygon points="0,-60 -55,-130 -50,-80 0,-30" fill="#475569" />
+
+      <!-- ================= ALERT & FOCUSED CYAN OPTICS (PREDATOR CANT) ================= -->
+      <!-- Slanted upward toward ears: Inner (48, -75), Outer (108, -100), Upper (78, -108), Lower (78, -68) -->
+      <!-- Right Eye Socket -->
+      <polygon points="46,-75 80,-112 112,-98 78,-66" fill="#080c14" />
+      <polygon points="52,-76 80,-106 106,-95 78,-72" fill="url(#cyan-glow)" />
+      <polygon points="70,-96 98,-94 82,-78" fill="#ffffff" opacity="0.9" />
+
+      <!-- Left Eye Socket -->
+      <polygon points="-46,-75 -80,-112 -112,-98 -78,-66" fill="#080c14" />
+      <polygon points="-52,-76 -80,-106 -106,-95 -78,-72" fill="url(#cyan-glow)" />
+      <polygon points="-70,-96 -98,-94 -82,-78" fill="#ffffff" opacity="0.9" />
+
+      <!-- Under-eye Cheek Accent -->
+      <polygon points="46,-75 78,-66 112,-98 135,-85 60,-15" fill="#334155" />
+      <polygon points="-46,-75 -78,-66 -112,-98 -135,-85 -60,-15" fill="#1e293b" />
+
+      <!-- ================= SNOUT & MUZZLE (FORWARD-PROJECTING HEDGEHOG NOSE) ================= -->
+      <!-- Snout Bridge -->
+      <polygon points="0,-30 45,15 0,70" fill="#94a3b8" />
+      <polygon points="0,-30 -45,15 0,70" fill="#64748b" />
+
+      <!-- Lateral Whiskers / Snout Plates -->
+      <polygon points="0,-30 60,-15 110,25 45,15" fill="#475569" />
+      <polygon points="0,-30 -60,-15 -110,25 -45,15" fill="#334155" />
+
+      <polygon points="45,15 110,25 120,35 60,75 0,70" fill="#334155" />
+      <polygon points="-45,15 -110,25 -120,35 -60,75 -0,70" fill="#1e293b" />
+
+      <!-- Hedgehog Dark Obsidian Nose Tip -->
+      <polygon points="0,70 30,55 0,95" fill="#0f172a" />
+      <polygon points="0,70 -30,55 0,95" fill="#080c14" />
+      <polygon points="0,95 30,55 0,45" fill="#1e293b" />
+      <polygon points="0,95 -30,55 0,45" fill="#0f172a" />
+
+      <!-- Chin -->
+      <polygon points="0,95 35,115 0,145" fill="#475569" />
+      <polygon points="0,95 -35,115 0,145" fill="#334155" />
+
+      <!-- Chest Armor Plate (Core Telemetry Node) -->
+      <polygon points="0,145 60,135 65,215 0,255" fill="#334155" />
+      <polygon points="0,145 -60,135 -65,215 0,255" fill="#1e293b" />
+
+      <polygon points="60,135 125,120 125,190 65,215" fill="#1e293b" />
+      <polygon points="-60,135 -125,120 -125,190 -65,215" fill="#0f172a" />
+
+      <!-- Subtle Cyan Core Indicator on Chest (Cookieless Engine Heartbeat) -->
+      <circle cx="0" cy="205" r="7" fill="#00f5ff" opacity="0.9" />
+      <circle cx="0" cy="205" r="14" fill="none" stroke="#00f5ff" stroke-width="2" opacity="0.4" />
+
+      <!-- Micro Telemetry Glyph "µ" on Forehead Crest -->
+      <path d="
+        M -12,-110 L -12,-85
+        M -12,-90 Q -6,-82 0,-85 L 0,-110
+        M 0,-90 L 0,-78
+      " fill="none" stroke="#00f5ff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" />
+
+    </g>
+  </g>
+</svg>

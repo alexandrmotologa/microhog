@@ -294,48 +294,86 @@ export function App() {
         </div>
 
         {/* Mobile Sub-Navigation */}
-        <div className="flex lg:hidden items-center justify-around border-t border-slate-800/80 px-2 py-1.5 bg-slate-950 text-xs overflow-x-auto">
+        <div className="flex lg:hidden items-center space-x-1.5 border-t border-slate-800/80 px-3 py-2 bg-slate-950/95 overflow-x-auto text-xs scrollbar-none">
           <button
             onClick={() => setActiveTab('overview')}
-            className={`p-1.5 whitespace-nowrap ${activeTab === 'overview' ? 'text-blue-400 font-bold' : 'text-slate-400'}`}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg whitespace-nowrap transition-all ${
+              activeTab === 'overview'
+                ? 'bg-blue-600 text-white font-semibold shadow-sm'
+                : 'text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800/60'
+            }`}
           >
-            Overview
+            <BarChart3 className="w-3.5 h-3.5" />
+            <span>Overview</span>
           </button>
           <button
             onClick={() => setActiveTab('realtime')}
-            className={`p-1.5 whitespace-nowrap ${activeTab === 'realtime' ? 'text-blue-400 font-bold' : 'text-slate-400'}`}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg whitespace-nowrap transition-all ${
+              activeTab === 'realtime'
+                ? 'bg-blue-600 text-white font-semibold shadow-sm'
+                : 'text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800/60'
+            }`}
           >
-            Realtime
+            <Radio className="w-3.5 h-3.5" />
+            <span>Real-Time</span>
+            {realtime && realtime.active_visitors > 0 && (
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            )}
           </button>
           <button
             onClick={() => setActiveTab('funnels')}
-            className={`p-1.5 whitespace-nowrap ${activeTab === 'funnels' ? 'text-blue-400 font-bold' : 'text-slate-400'}`}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg whitespace-nowrap transition-all ${
+              activeTab === 'funnels'
+                ? 'bg-blue-600 text-white font-semibold shadow-sm'
+                : 'text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800/60'
+            }`}
           >
-            Funnels
+            <Filter className="w-3.5 h-3.5" />
+            <span>Funnels</span>
           </button>
           <button
             onClick={() => setActiveTab('replays')}
-            className={`p-1.5 whitespace-nowrap ${activeTab === 'replays' ? 'text-blue-400 font-bold' : 'text-slate-400'}`}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg whitespace-nowrap transition-all ${
+              activeTab === 'replays'
+                ? 'bg-blue-600 text-white font-semibold shadow-sm'
+                : 'text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800/60'
+            }`}
           >
-            Replays
+            <Video className="w-3.5 h-3.5" />
+            <span>Replays</span>
           </button>
           <button
             onClick={() => setActiveTab('vitals')}
-            className={`p-1.5 whitespace-nowrap ${activeTab === 'vitals' ? 'text-blue-400 font-bold' : 'text-slate-400'}`}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg whitespace-nowrap transition-all ${
+              activeTab === 'vitals'
+                ? 'bg-blue-600 text-white font-semibold shadow-sm'
+                : 'text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800/60'
+            }`}
           >
-            Vitals
+            <Gauge className="w-3.5 h-3.5" />
+            <span>Web Vitals</span>
           </button>
           <button
             onClick={() => setActiveTab('explorer')}
-            className={`p-1.5 whitespace-nowrap ${activeTab === 'explorer' ? 'text-blue-400 font-bold' : 'text-slate-400'}`}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg whitespace-nowrap transition-all ${
+              activeTab === 'explorer'
+                ? 'bg-blue-600 text-white font-semibold shadow-sm'
+                : 'text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800/60'
+            }`}
           >
-            Events
+            <Search className="w-3.5 h-3.5" />
+            <span>Events</span>
           </button>
           <button
             onClick={() => setActiveTab('setup')}
-            className={`p-1.5 whitespace-nowrap ${activeTab === 'setup' ? 'text-blue-400 font-bold' : 'text-slate-400'}`}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg whitespace-nowrap transition-all ${
+              activeTab === 'setup'
+                ? 'bg-blue-600 text-white font-semibold shadow-sm'
+                : 'text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800/60'
+            }`}
           >
-            Settings
+            <Code2 className="w-3.5 h-3.5" />
+            <span>Settings</span>
           </button>
         </div>
       </header>
@@ -353,7 +391,7 @@ export function App() {
         {activeTab === 'overview' && (
           <div className="space-y-6">
             {/* Top Metric Cards Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
               <MetricCard
                 title="Pageviews"
                 value={formatNumber(metrics?.summary.pageviews)}

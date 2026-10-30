@@ -1,8 +1,71 @@
-# MicroHog
+<p align="center">
+  <img src="docs/images/logo.png?raw=true" alt="MicroHog Logo" width="130" style="border-radius: 24px;" />
+</p>
 
-Self-hosted product analytics, conversion funnels, and DOM session replay engine running in a single Go binary with SQLite storage.
+<h1 align="center">MicroHog</h1>
 
-MicroHog provides an alternative to complex, multi-service analytics systems. It requires under 50 MB of memory on a low-cost virtual private server. Ingestion operates via a 2 KB tracking script that works without persistent cookies, eliminating cookie consent banner requirements. The engine also records compressed DOM session replays with client-side privacy masking and computes conversion funnels.
+<p align="center">
+  Self-hosted product analytics, conversion funnels, and DOM session replay engine running in a single Go binary with SQLite storage.
+</p>
+
+<p align="center">
+  <a href="https://golang.org"><img src="https://img.shields.io/badge/Go-1.23-00ADD8?style=flat-square&logo=go" alt="Go 1.23" /></a>
+  <a href="https://sqlite.org"><img src="https://img.shields.io/badge/SQLite-WAL-003B57?style=flat-square&logo=sqlite" alt="SQLite WAL" /></a>
+  <a href="https://react.dev"><img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react" alt="React 19" /></a>
+  <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-5.0-3178C6?style=flat-square&logo=typescript" alt="TypeScript" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" alt="MIT License" /></a>
+</p>
+
+<p align="center">
+  <img src="docs/images/microhog_demo.gif?raw=true" alt="MicroHog Live Studio Demo" width="100%" style="border-radius: 12px; border: 1px solid #1e293b;" />
+</p>
+
+---
+
+## Overview
+
+MicroHog provides an alternative to complex, multi-service analytics architectures. It runs as a single Go binary consuming under 50 MB of memory on a low-cost virtual private server. Ingestion operates via an uncompressed 2 KB tracking script that works without persistent cookies, eliminating cookie consent banner requirements under GDPR, CCPA, and PECR.
+
+The platform includes client-side DOM session mutation recording using rrweb with automatic masking of passwords and credit cards, sequential conversion funnel calculations, frustration click detection, and Core Web Vitals monitoring.
+
+---
+
+## Screenshots
+
+### Real-Time Product Analytics Dashboard
+Traffic trends, visitor counts, sessions, bounce rate, average duration, and geographic distributions.
+
+<p align="center">
+  <img src="docs/images/microhog_dashboard.png?raw=true" alt="MicroHog Overview Dashboard" width="100%" style="border-radius: 10px; border: 1px solid #1e293b;" />
+</p>
+
+### Conversion Funnel Studio & Persistence
+Build, calculate, and save multi-step conversion funnels across pages and custom events.
+
+<p align="center">
+  <img src="docs/images/microhog_funnels.png?raw=true" alt="Conversion Funnel Studio" width="100%" style="border-radius: 10px; border: 1px solid #1e293b;" />
+</p>
+
+### DOM Session Replay with Privacy Masking
+Reconstruct user journeys with real DOM playback, timeline scrubbers, speed controls, and automatic input obfuscation.
+
+<p align="center">
+  <img src="docs/images/microhog_replays.png?raw=true" alt="DOM Session Replay Player" width="100%" style="border-radius: 10px; border: 1px solid #1e293b;" />
+</p>
+
+### Core Web Vitals (p75 Benchmark)
+Field performance monitoring for LCP, INP, and CLS with Google threshold classifications.
+
+<p align="center">
+  <img src="docs/images/microhog_vitals.png?raw=true" alt="Core Web Vitals Monitoring" width="100%" style="border-radius: 10px; border: 1px solid #1e293b;" />
+</p>
+
+### Responsive Mobile Interface
+Optimized layouts for mobile devices and tablets with responsive sub-navigation and touch-friendly controls.
+
+<p align="center">
+  <img src="docs/images/microhog_mobile.png?raw=true" alt="Responsive Mobile Studio" width="380" style="border-radius: 10px; border: 1px solid #1e293b;" />
+</p>
 
 ---
 
@@ -63,6 +126,7 @@ To enable session replay recording, include `data-record="true"`:
   defer 
   src="http://localhost:8080/microhog.js" 
   data-site="default"
+  data-host="http://localhost:8080"
   data-record="true">
 </script>
 ```
@@ -102,6 +166,7 @@ Embedded Web Studio & Replay Player (React 19)
 | `--db` | `./microhog.db` | File path to SQLite database. |
 | `--salt-secret` | Auto-generated | Secret used for daily rotating visitor hash. |
 | `--retention-days` | `90` | Days to keep events and session recordings before automatic cleanup. |
+| `--seed` | `false` | Populate synthetic traffic and sample replays on startup if database is empty. |
 
 ---
 
