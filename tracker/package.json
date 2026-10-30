@@ -1,0 +1,13 @@
+{
+  "name": "@microhog/tracker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Ultra-lightweight 2KB product analytics tracker and DOM session recorder",
+  "scripts": {
+    "build": "node esbuild.config.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "typescript": "^5.8.0"
+  }
+}
