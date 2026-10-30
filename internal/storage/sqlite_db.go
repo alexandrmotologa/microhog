@@ -26,14 +26,12 @@ func OpenDB(dbPath string) (*DB, error) {
 		}
 	}
 
-	// SQLite connection string with busy timeout and WAL configuration
 	dsn := fmt.Sprintf("%s?_journal_mode=WAL&_synchronous=NORMAL&_busy_timeout=5000&_cache_size=-20000", dbPath)
 	db, err := sql.Open("sqlite3", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open sqlite database: %w", err)
 	}
 
-	// SQLite handles concurrent reads with WAL, but only one concurrent writer
 	db.SetMaxOpenConns(1)
 	db.SetMaxIdleConns(1)
 	db.SetConnMaxLifetime(time.Hour)
@@ -99,7 +97,8 @@ func (db *DB) migrate() error {
 		os TEXT NOT NULL DEFAULT '',
 		device TEXT NOT NULL DEFAULT 'desktop',
 		country TEXT NOT NULL DEFAULT '',
-		has_replay BOOLEAN NOT NULL DEFAULT 0
+		has_replay BOOLEAN NOT NULL DEFAULT 0,
+		has_rage_click BOOLEAN NOT NULL DEFAULT 0
 	);
 
 	CREATE INDEX IF NOT EXISTS idx_sessions_site_started ON sessions(site_id, started_at DESC);
@@ -116,8 +115,35 @@ func (db *DB) migrate() error {
 	);
 
 	CREATE INDEX IF NOT EXISTS idx_replays_session ON replays(session_id, chunk_index);
+
+	CREATE TABLE IF NOT EXISTS funnels (
+		id TEXT PRIMARY KEY,
+		site_id TEXT NOT NULL DEFAULT 'default',
+		name TEXT NOT NULL,
+		steps_json TEXT NOT NULL DEFAULT '[]',
+		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+	);
+
+	CREATE INDEX IF NOT EXISTS idx_funnels_site ON funnels(site_id);
+
+	CREATE TABLE IF NOT EXISTS webhooks (
+		id TEXT PRIMARY KEY,
+		site_id TEXT NOT NULL DEFAULT 'default',
+		name TEXT NOT NULL,
+		url TEXT NOT NULL,
+		event_filter TEXT NOT NULL DEFAULT 'all',
+		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+	);
+
+	CREATE INDEX IF NOT EXISTS idx_webhooks_site ON webhooks(site_id);
 	`
 
-	_, err := db.Exec(schema)
-	return err
+	if _, err := db.Exec(schema); err != nil {
+		return err
+	}
+
+	// Safe alter migrations for existing installations
+	_, _ = db.Exec("ALTER TABLE sessions ADD COLUMN has_rage_click BOOLEAN NOT NULL DEFAULT 0")
+
+	return nil
 }

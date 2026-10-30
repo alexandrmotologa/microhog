@@ -79,7 +79,7 @@ func TestStorageLifecycle(t *testing.T) {
 	}
 
 	// 5. Test Sessions
-	sessions, total, err := es.GetSessions("default", 10, 0)
+	sessions, total, err := es.GetSessions("default", 10, 0, false)
 	if err != nil {
 		t.Fatalf("GetSessions failed: %v", err)
 	}
@@ -110,7 +110,7 @@ func TestStorageLifecycle(t *testing.T) {
 	}
 
 	// 7. Verify session has_replay was set to true
-	updatedSessions, _, _ := es.GetSessions("default", 1, 0)
+	updatedSessions, _, _ := es.GetSessions("default", 1, 0, false)
 	if len(updatedSessions) == 0 || !updatedSessions[0].HasReplay {
 		t.Errorf("Expected session has_replay to be true")
 	}

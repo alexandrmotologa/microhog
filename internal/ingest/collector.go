@@ -33,10 +33,11 @@ type ReplayChunkPayload struct {
 
 // Collector exposes HTTP endpoints for receiving event and replay data.
 type Collector struct {
-	anonymizer      *Anonymizer
-	bufferPool      *BufferPool
-	replayStore     *storage.ReplayStore
-	realtimeTracker *analytics.RealtimeTracker
+	anonymizer        *Anonymizer
+	bufferPool        *BufferPool
+	replayStore       *storage.ReplayStore
+	realtimeTracker   *analytics.RealtimeTracker
+	webhookDispatcher *analytics.WebhookDispatcher
 }
 
 // NewCollector constructs a Collector instance.
@@ -45,12 +46,14 @@ func NewCollector(
 	bp *BufferPool,
 	rs *storage.ReplayStore,
 	rt *analytics.RealtimeTracker,
+	wd *analytics.WebhookDispatcher,
 ) *Collector {
 	return &Collector{
-		anonymizer:      anon,
-		bufferPool:      bp,
-		replayStore:     rs,
-		realtimeTracker: rt,
+		anonymizer:        anon,
+		bufferPool:        bp,
+		replayStore:       rs,
+		realtimeTracker:   rt,
+		webhookDispatcher: wd,
 	}
 }
 
@@ -154,6 +157,11 @@ func (c *Collector) HandleEvent(w http.ResponseWriter, r *http.Request) {
 		// Update real-time tracker
 		if c.realtimeTracker != nil {
 			c.realtimeTracker.RecordVisit(event)
+		}
+
+		// Trigger webhook notifications if matched
+		if c.webhookDispatcher != nil {
+			c.webhookDispatcher.Dispatch(event)
 		}
 
 		received++

@@ -31,7 +31,7 @@ func (s *Seeder) SeedData(siteID string) error {
 		siteID = "default"
 	}
 
-	r := rand.New(rand.NewSource(42)) // Deterministic seed for reproducible data
+	r := rand.New(rand.NewSource(42))
 
 	paths := []string{
 		"/",
@@ -66,14 +66,12 @@ func (s *Seeder) SeedData(siteID string) error {
 	var sampleSessionID string
 
 	for i := 0; i < totalSessions; i++ {
-		// Session spread across the last 7 days
 		hoursAgo := r.Float64() * 168.0 // 7 days = 168h
 		sessionStart := now.Add(-time.Duration(hoursAgo * float64(time.Hour)))
 
 		sessionID := fmt.Sprintf("sess_%04d_%x", i, sessionStart.Unix())
 		visitorID := fmt.Sprintf("vis_%04d_%x", i%95, (i%95)*1337)
 
-		// Choose metadata
 		browser := browsers[r.Intn(len(browsers))]
 		osName := osList[r.Intn(len(osList))]
 		device := "desktop"
@@ -84,19 +82,32 @@ func (s *Seeder) SeedData(siteID string) error {
 
 		refChoice := referrers[r.Intn(len(referrers))]
 
-		// Pick user journey
-		// Funnel path: / -> /pricing -> click_signup -> /signup -> /app/dashboard
 		var journey []struct {
 			name      string
 			path      string
 			delaySecs int
+			props     string
 		}
 
 		journey = append(journey, struct {
 			name      string
 			path      string
 			delaySecs int
-		}{"$pageview", "/", 0})
+			props     string
+		}{"$pageview", "/", 0, "{}"})
+
+		// Add Web Vitals measurement for initial page
+		lcpVal := 800 + r.Float64()*1400 // 800ms - 2200ms (Good)
+		inpVal := 40 + r.Float64()*120   // 40ms - 160ms (Good)
+		clsVal := r.Float64() * 0.05     // 0.00 - 0.05 (Good)
+		vitalsJSON := fmt.Sprintf(`{"lcp":%.1f,"inp":%.1f,"cls":%.3f}`, lcpVal, inpVal, clsVal)
+
+		journey = append(journey, struct {
+			name      string
+			path      string
+			delaySecs int
+			props     string
+		}{"$web_vitals", "/", 2, vitalsJSON})
 
 		// 60% chance to view pricing
 		if r.Float64() < 0.60 {
@@ -104,21 +115,34 @@ func (s *Seeder) SeedData(siteID string) error {
 				name      string
 				path      string
 				delaySecs int
-			}{"$pageview", "/pricing", 15 + r.Intn(45)})
+				props     string
+			}{"$pageview", "/pricing", 15 + r.Intn(45), "{}"})
 
-			// 35% of those click signup
+			// Add rage click simulation for ~8% of sessions
+			if r.Float64() < 0.08 {
+				journey = append(journey, struct {
+					name      string
+					path      string
+					delaySecs int
+					props     string
+				}{"$rage_click", "/pricing", 4, `{"target_tag":"button","target_text":"Upgrade to Pro","clicks":4,"rage_click":true}`})
+			}
+
+			// 35% of pricing visitors click signup
 			if r.Float64() < 0.35 {
 				journey = append(journey, struct {
 					name      string
 					path      string
 					delaySecs int
-				}{"click_signup", "/pricing", 5 + r.Intn(20)})
+					props     string
+				}{"click_signup", "/pricing", 5 + r.Intn(20), `{"button_id":"hero_cta","plan":"founder"}`})
 
 				journey = append(journey, struct {
 					name      string
 					path      string
 					delaySecs int
-				}{"$pageview", "/signup", 3 + r.Intn(10)})
+					props     string
+				}{"$pageview", "/signup", 3 + r.Intn(10), "{}"})
 
 				// 50% finish signup and reach app
 				if r.Float64() < 0.50 {
@@ -126,17 +150,18 @@ func (s *Seeder) SeedData(siteID string) error {
 						name      string
 						path      string
 						delaySecs int
-					}{"signup_completed", "/signup", 10 + r.Intn(30)})
+						props     string
+					}{"signup_completed", "/signup", 10 + r.Intn(30), `{"tier":"pro","annual":true}`})
 
 					journey = append(journey, struct {
 						name      string
 						path      string
 						delaySecs int
-					}{"$pageview", "/app/dashboard", 2 + r.Intn(5)})
+						props     string
+					}{"$pageview", "/app/dashboard", 2 + r.Intn(5), "{}"})
 				}
 			}
 		} else {
-			// Some casual browsing
 			extraPages := 1 + r.Intn(3)
 			elapsed := 10
 			for p := 0; p < extraPages; p++ {
@@ -146,7 +171,8 @@ func (s *Seeder) SeedData(siteID string) error {
 					name      string
 					path      string
 					delaySecs int
-				}{"$pageview", page, elapsed})
+					props     string
+				}{"$pageview", page, elapsed, "{}"})
 			}
 		}
 
@@ -166,7 +192,7 @@ func (s *Seeder) SeedData(siteID string) error {
 				OS:             osName,
 				Device:         device,
 				Country:        country,
-				PropertiesJSON: "{}",
+				PropertiesJSON: step.props,
 				CreatedAt:      currentSessionTime,
 			})
 		}
@@ -187,6 +213,9 @@ func (s *Seeder) SeedData(siteID string) error {
 		}
 	}
 
+	// Seed sample saved funnel
+	s.seedDefaultFunnels(siteID)
+
 	// Create sample rrweb session replay for the first session
 	if sampleSessionID != "" {
 		if err := s.seedSampleReplay(sampleSessionID); err != nil {
@@ -197,10 +226,25 @@ func (s *Seeder) SeedData(siteID string) error {
 	return nil
 }
 
+func (s *Seeder) seedDefaultFunnels(siteID string) {
+	steps := []map[string]string{
+		{"type": "pageview", "path": "/"},
+		{"type": "pageview", "path": "/pricing"},
+		{"type": "event", "name": "click_signup"},
+		{"type": "pageview", "path": "/signup"},
+		{"type": "event", "name": "signup_completed"},
+		{"type": "pageview", "path": "/app/dashboard"},
+	}
+	stepsJSON, _ := json.Marshal(steps)
+
+	query := `
+		INSERT OR IGNORE INTO funnels (id, site_id, name, steps_json, created_at)
+		VALUES (?, ?, ?, ?, ?)
+	`
+	_, _ = s.db.Exec(query, "fn_saas_onboarding", siteID, "Full SaaS Conversion", string(stepsJSON), time.Now().UTC().Format("2006-01-02 15:04:05"))
+}
+
 func (s *Seeder) seedSampleReplay(sessionID string) error {
-	// Synthesize a valid rrweb event stream representing a real browser DOM recording
-	// Event types in rrweb:
-	// 0: DomContentLoaded, 1: Load, 2: FullSnapshot, 3: IncrementalSnapshot (mouse move, mouse click, scroll)
 	baseTime := time.Now().UnixMilli()
 
 	rrwebEvents := []map[string]interface{}{
@@ -215,39 +259,39 @@ func (s *Seeder) seedSampleReplay(sessionID string) error {
 			"data":      map[string]interface{}{},
 		},
 		{
-			"type":      2, // FullSnapshot of document
+			"type":      2,
 			"timestamp": baseTime + 200,
 			"data": map[string]interface{}{
 				"node": map[string]interface{}{
 					"id":   1,
-					"type": 0, // Document
+					"type": 0,
 					"childNodes": []map[string]interface{}{
 						{
 							"id":        2,
-							"type":      1, // DocumentType
+							"type":      1,
 							"name":      "html",
 							"publicId":  "",
 							"systemId":  "",
 						},
 						{
 							"id":       3,
-							"type":     2, // Element html
+							"type":     2,
 							"tagName":  "html",
 							"attributes": map[string]interface{}{"lang": "en"},
 							"childNodes": []map[string]interface{}{
 								{
 									"id":      4,
-									"type":    2, // Element head
+									"type":    2,
 									"tagName": "head",
 									"childNodes": []map[string]interface{}{
 										{
 											"id":       5,
-											"type":     2, // style
+											"type":     2,
 											"tagName":  "style",
 											"childNodes": []map[string]interface{}{
 												{
 													"id":          6,
-													"type":        3, // Text
+													"type":        3,
 													"textContent": "body { font-family: -apple-system, sans-serif; background: #0f172a; color: #f8fafc; padding: 40px; margin: 0; } .hero { max-width: 600px; margin: 0 auto; text-align: center; } .btn { display: inline-block; background: #3b82f6; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; cursor: pointer; border: none; margin-top: 24px; transition: transform 0.2s; } .btn:hover { background: #2563eb; transform: scale(1.05); } .card { background: #1e293b; padding: 24px; border-radius: 12px; margin-top: 32px; border: 1px solid #334155; } input { width: 100%; box-sizing: border-box; background: #0f172a; border: 1px solid #475569; color: white; padding: 10px; border-radius: 6px; margin-top: 8px; }",
 												},
 											},
@@ -256,7 +300,7 @@ func (s *Seeder) seedSampleReplay(sessionID string) error {
 								},
 								{
 									"id":      7,
-									"type":    2, // Element body
+									"type":    2,
 									"tagName": "body",
 									"childNodes": []map[string]interface{}{
 										{
@@ -340,8 +384,6 @@ func (s *Seeder) seedSampleReplay(sessionID string) error {
 		},
 	}
 
-	// Add mouse movement and click snapshots
-	// Mouse movement simulation
 	coords := [][2]int{
 		{200, 150}, {250, 180}, {300, 220}, {350, 270}, {400, 310},
 		{420, 350}, {430, 380}, {435, 410}, {440, 420},
@@ -351,10 +393,10 @@ func (s *Seeder) seedSampleReplay(sessionID string) error {
 	for _, pt := range coords {
 		t += 150
 		rrwebEvents = append(rrwebEvents, map[string]interface{}{
-			"type":      3, // IncrementalSnapshot
+			"type":      3,
 			"timestamp": t,
 			"data": map[string]interface{}{
-				"source": 1, // MouseMove
+				"source": 1,
 				"positions": []map[string]interface{}{
 					{"x": pt[0], "y": pt[1], "id": 7, "timeOffset": 0},
 				},
@@ -362,14 +404,13 @@ func (s *Seeder) seedSampleReplay(sessionID string) error {
 		})
 	}
 
-	// Mouse click on button at t + 300
 	t += 300
 	rrwebEvents = append(rrwebEvents, map[string]interface{}{
 		"type":      3,
 		"timestamp": t,
 		"data": map[string]interface{}{
-			"source": 2, // MouseInteraction
-			"type":   2, // Click
+			"source": 2,
+			"type":   2,
 			"id":     17,
 			"x":      440,
 			"y":      420,

@@ -1,5 +1,16 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { MetricsPayload, RealtimeStats, SessionItem, FunnelResult, FunnelStepDef } from '../types/api';
+import { useState, useEffect, useCallback } from 'react';
+import {
+  MetricsPayload,
+  RealtimeStats,
+  SessionItem,
+  FunnelResult,
+  FunnelStepDef,
+  SavedFunnel,
+  WebVitalsReport,
+  SiteItem,
+  WebhookItem,
+  EventItem,
+} from '../types/api';
 
 export function useAnalytics(siteId: string, timeRange: string) {
   const [metrics, setMetrics] = useState<MetricsPayload | null>(null);
@@ -27,9 +38,11 @@ export function useAnalytics(siteId: string, timeRange: string) {
   }, [siteId, timeRange]);
 
   // 2. Fetch Sessions
-  const fetchSessions = useCallback(async (limit = 50, offset = 0) => {
+  const fetchSessions = useCallback(async (limit = 50, offset = 0, rageOnly = false) => {
     try {
-      const res = await fetch(`/api/sessions?site_id=${encodeURIComponent(siteId)}&limit=${limit}&offset=${offset}`);
+      const res = await fetch(
+        `/api/sessions?site_id=${encodeURIComponent(siteId)}&limit=${limit}&offset=${offset}${rageOnly ? '&rage_only=true' : ''}`
+      );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setSessions(data.sessions || []);
@@ -72,30 +85,23 @@ export function useAnalytics(siteId: string, timeRange: string) {
       try {
         const eventData = JSON.parse(e.data);
         setLiveEvents((prev) => [eventData, ...prev.slice(0, 49)]);
-        // Incrementally refresh realtime stats
         fetchRealtime();
       } catch {}
     });
 
-    eventSource.onerror = () => {
-      // EventSource auto reconnects
-    };
+    eventSource.onerror = () => {};
 
     return () => {
       eventSource.close();
     };
   }, [siteId, fetchRealtime]);
 
-  // 5. Calculate Funnel
+  // 5. Funnels
   const calculateFunnel = async (steps: FunnelStepDef[], range: string): Promise<FunnelResult> => {
     const res = await fetch('/api/funnels', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        site_id: siteId,
-        steps: steps,
-        range: range,
-      }),
+      body: JSON.stringify({ site_id: siteId, steps, range }),
     });
     if (!res.ok) {
       const text = await res.text();
@@ -104,7 +110,97 @@ export function useAnalytics(siteId: string, timeRange: string) {
     return res.json();
   };
 
-  // 6. Trigger Seed
+  const fetchSavedFunnels = async (): Promise<SavedFunnel[]> => {
+    const res = await fetch(`/api/funnels/saved?site_id=${encodeURIComponent(siteId)}`);
+    if (!res.ok) return [];
+    return res.json();
+  };
+
+  const saveFunnel = async (name: string, steps: FunnelStepDef[]): Promise<SavedFunnel> => {
+    const res = await fetch('/api/funnels/saved', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ site_id: siteId, name, steps }),
+    });
+    if (!res.ok) throw new Error('Failed to save funnel');
+    return res.json();
+  };
+
+  const deleteSavedFunnel = async (id: string): Promise<void> => {
+    await fetch(`/api/funnels/saved/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  };
+
+  // 6. Core Web Vitals
+  const fetchWebVitals = async (range = '7d'): Promise<WebVitalsReport> => {
+    const res = await fetch(`/api/vitals?site_id=${encodeURIComponent(siteId)}&range=${range}`);
+    if (!res.ok) throw new Error('Failed to fetch web vitals');
+    return res.json();
+  };
+
+  // 7. Event Explorer / Search
+  const searchEvents = async (query = '', eventName = 'all', limit = 50, offset = 0): Promise<{ events: EventItem[]; total: number }> => {
+    const res = await fetch(
+      `/api/events/search?site_id=${encodeURIComponent(siteId)}&query=${encodeURIComponent(query)}&event_name=${encodeURIComponent(eventName)}&limit=${limit}&offset=${offset}`
+    );
+    if (!res.ok) throw new Error('Failed to search events');
+    return res.json();
+  };
+
+  // 8. Sites Management
+  const fetchSites = async (): Promise<SiteItem[]> => {
+    const res = await fetch('/api/sites');
+    if (!res.ok) return [];
+    return res.json();
+  };
+
+  const createSite = async (id: string, name: string, domain: string): Promise<void> => {
+    const res = await fetch('/api/sites', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, name, domain }),
+    });
+    if (!res.ok) throw new Error('Failed to create site');
+  };
+
+  const deleteSite = async (id: string): Promise<void> => {
+    const res = await fetch(`/api/sites/${encodeURIComponent(id)}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Failed to delete site');
+  };
+
+  // 9. Webhooks
+  const fetchWebhooks = async (): Promise<WebhookItem[]> => {
+    const res = await fetch(`/api/webhooks?site_id=${encodeURIComponent(siteId)}`);
+    if (!res.ok) return [];
+    return res.json();
+  };
+
+  const saveWebhook = async (name: string, url: string, eventFilter = 'all'): Promise<WebhookItem> => {
+    const res = await fetch('/api/webhooks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ site_id: siteId, name, url, event_filter: eventFilter }),
+    });
+    if (!res.ok) throw new Error('Failed to save webhook');
+    return res.json();
+  };
+
+  const deleteWebhook = async (id: string): Promise<void> => {
+    await fetch(`/api/webhooks/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  };
+
+  const testWebhook = async (url: string): Promise<void> => {
+    const res = await fetch('/api/webhooks/test', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.message || 'Webhook verification failed');
+    }
+  };
+
+  // 10. Seed Trigger
   const triggerSeed = async () => {
     const res = await fetch(`/api/seed?site_id=${encodeURIComponent(siteId)}`, { method: 'POST' });
     if (!res.ok) throw new Error('Failed to seed demo data');
@@ -124,6 +220,18 @@ export function useAnalytics(siteId: string, timeRange: string) {
     refresh: fetchMetrics,
     fetchSessions,
     calculateFunnel,
+    fetchSavedFunnels,
+    saveFunnel,
+    deleteSavedFunnel,
+    fetchWebVitals,
+    searchEvents,
+    fetchSites,
+    createSite,
+    deleteSite,
+    fetchWebhooks,
+    saveWebhook,
+    deleteWebhook,
+    testWebhook,
     triggerSeed,
   };
 }

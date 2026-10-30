@@ -83,6 +83,10 @@ func runServe(args []string) {
 	if err != nil {
 		log.Fatalf("[MicroHog] Failed to initialize replay store: %v", err)
 	}
+	funnelStore := storage.NewFunnelStore(db)
+	webhookStore := storage.NewWebhookStore(db)
+	webhookDispatcher := analytics.NewWebhookDispatcher(webhookStore)
+
 	retentionManager := storage.NewRetentionManager(db, cfg.RetentionDays)
 
 	// 3. Initialize Analytics Services
@@ -111,13 +115,16 @@ func runServe(args []string) {
 	bufferPool := ingest.NewBufferPool(eventStore, 10000, 200, 500*time.Millisecond)
 	defer bufferPool.Stop()
 
-	collector := ingest.NewCollector(anonymizer, bufferPool, replayStore, realtimeTracker)
+	collector := ingest.NewCollector(anonymizer, bufferPool, replayStore, realtimeTracker, webhookDispatcher)
 
 	// 5. Initialize API and HTTP Router
 	apiHandler := server.NewAPIHandler(
 		db,
 		eventStore,
 		replayStore,
+		funnelStore,
+		webhookStore,
+		webhookDispatcher,
 		metricsService,
 		funnelEngine,
 		realtimeTracker,
@@ -194,7 +201,7 @@ func runSeed(args []string) {
 	if err := seeder.SeedData(*siteID); err != nil {
 		log.Fatalf("[Seed] Failed: %v", err)
 	}
-	log.Printf("[Seed] Success! 240+ sessions and full session replay generated.")
+	log.Printf("[Seed] Success! 240+ sessions, web vitals, rage clicks, and full session replay generated.")
 }
 
 func runPrune(args []string) {

@@ -7,6 +7,9 @@ import { FunnelChart } from './components/FunnelChart';
 import { SessionTable } from './components/SessionTable';
 import { ReplayModal } from './components/ReplayModal';
 import { SetupGuide } from './components/SetupGuide';
+import { WebVitalsTab } from './components/WebVitalsTab';
+import { EventExplorer } from './components/EventExplorer';
+import { SiteModal } from './components/SiteModal';
 import {
   BarChart3,
   Radio,
@@ -22,14 +25,22 @@ import {
   Layers,
   Sparkles,
   ExternalLink,
-  Laptop,
+  Gauge,
+  Search,
+  Download,
+  Globe,
+  ChevronDown,
 } from 'lucide-react';
 
 export function App() {
   const [siteId, setSiteId] = useState<string>('default');
   const [timeRange, setTimeRange] = useState<string>('7d');
-  const [activeTab, setActiveTab] = useState<'overview' | 'realtime' | 'funnels' | 'replays' | 'setup'>('overview');
+  const [activeTab, setActiveTab] = useState<
+    'overview' | 'realtime' | 'funnels' | 'replays' | 'vitals' | 'explorer' | 'setup'
+  >('overview');
   const [selectedReplayId, setSelectedReplayId] = useState<string | null>(null);
+  const [siteModalOpen, setSiteModalOpen] = useState<boolean>(false);
+  const [exportOpen, setExportOpen] = useState<boolean>(false);
   const [seedNotice, setSeedNotice] = useState<string | null>(null);
 
   const {
@@ -40,7 +51,20 @@ export function App() {
     liveEvents,
     loading,
     refresh,
+    fetchSessions,
     calculateFunnel,
+    fetchSavedFunnels,
+    saveFunnel,
+    deleteSavedFunnel,
+    fetchWebVitals,
+    searchEvents,
+    fetchSites,
+    createSite,
+    deleteSite,
+    fetchWebhooks,
+    saveWebhook,
+    deleteWebhook,
+    testWebhook,
     triggerSeed,
   } = useAnalytics(siteId, timeRange);
 
@@ -48,7 +72,7 @@ export function App() {
     try {
       setSeedNotice('Seeding demo data across past 7 days...');
       await triggerSeed();
-      setSeedNotice('Sample sessions, funnels, and replay data generated!');
+      setSeedNotice('Sample sessions, funnels, web vitals, and replays generated!');
       setTimeout(() => setSeedNotice(null), 4000);
     } catch {
       setSeedNotice('Failed to generate sample data');
@@ -73,7 +97,7 @@ export function App() {
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
       {/* Top Navbar */}
       <header className="sticky top-0 z-40 bg-slate-950/80 backdrop-blur-md border-b border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
           {/* Logo & Product Name */}
           <div className="flex items-center space-x-3">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20 text-white font-black text-lg">
@@ -82,21 +106,24 @@ export function App() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-bold text-white tracking-tight text-base">MicroHog</span>
-                <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                  v1.0
-                </span>
+                {/* Site Switcher Trigger */}
+                <button
+                  onClick={() => setSiteModalOpen(true)}
+                  className="flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors"
+                >
+                  <Globe className="w-3 h-3 text-blue-400" />
+                  <span>{siteId}</span>
+                  <ChevronDown className="w-3 h-3 text-slate-500" />
+                </button>
               </div>
-              <p className="text-[11px] text-slate-400 hidden sm:block">
-                Single-Binary Cookieless Analytics & Replay
-              </p>
             </div>
           </div>
 
           {/* Center Navigation Tabs */}
-          <nav className="hidden md:flex items-center space-x-1 bg-slate-900/90 border border-slate-800 p-1 rounded-xl text-xs font-medium">
+          <nav className="hidden lg:flex items-center space-x-1 bg-slate-900/90 border border-slate-800 p-1 rounded-xl text-xs font-medium">
             <button
               onClick={() => setActiveTab('overview')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg transition-all ${
                 activeTab === 'overview'
                   ? 'bg-blue-600 text-white shadow-sm'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
@@ -107,7 +134,7 @@ export function App() {
             </button>
             <button
               onClick={() => setActiveTab('realtime')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg transition-all ${
                 activeTab === 'realtime'
                   ? 'bg-blue-600 text-white shadow-sm'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
@@ -116,12 +143,12 @@ export function App() {
               <Radio className="w-3.5 h-3.5" />
               Real-Time
               {realtime && realtime.active_visitors > 0 && (
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-0.5"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse ml-0.5"></span>
               )}
             </button>
             <button
               onClick={() => setActiveTab('funnels')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg transition-all ${
                 activeTab === 'funnels'
                   ? 'bg-blue-600 text-white shadow-sm'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
@@ -132,7 +159,7 @@ export function App() {
             </button>
             <button
               onClick={() => setActiveTab('replays')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg transition-all ${
                 activeTab === 'replays'
                   ? 'bg-blue-600 text-white shadow-sm'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
@@ -142,15 +169,37 @@ export function App() {
               Replays
             </button>
             <button
+              onClick={() => setActiveTab('vitals')}
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg transition-all ${
+                activeTab === 'vitals'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+              }`}
+            >
+              <Gauge className="w-3.5 h-3.5" />
+              Web Vitals
+            </button>
+            <button
+              onClick={() => setActiveTab('explorer')}
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg transition-all ${
+                activeTab === 'explorer'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+              }`}
+            >
+              <Search className="w-3.5 h-3.5" />
+              Events
+            </button>
+            <button
               onClick={() => setActiveTab('setup')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg transition-all ${
                 activeTab === 'setup'
                   ? 'bg-blue-600 text-white shadow-sm'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
               }`}
             >
               <Code2 className="w-3.5 h-3.5" />
-              Install
+              Settings
             </button>
           </nav>
 
@@ -168,11 +217,60 @@ export function App() {
               onChange={(e) => setTimeRange(e.target.value)}
               className="bg-slate-900 border border-slate-700 text-slate-300 text-xs rounded-lg px-2.5 py-1.5 outline-none font-medium cursor-pointer"
             >
-              <option value="24h">Last 24h</option>
-              <option value="7d">Last 7d</option>
-              <option value="30d">Last 30d</option>
-              <option value="90d">Last 90d</option>
+              <option value="24h">24h</option>
+              <option value="7d">7d</option>
+              <option value="30d">30d</option>
+              <option value="90d">90d</option>
             </select>
+
+            {/* Export Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setExportOpen(!exportOpen)}
+                className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-colors"
+                title="Export Data"
+              >
+                <Download className="w-3.5 h-3.5 text-blue-400" />
+                <span className="hidden sm:inline">Export</span>
+              </button>
+
+              {exportOpen && (
+                <div className="absolute right-0 mt-1 w-44 bg-slate-900 border border-slate-800 rounded-xl shadow-xl p-1 z-50 text-xs text-slate-300 space-y-0.5">
+                  <a
+                    href={`/api/export/events?site_id=${encodeURIComponent(siteId)}&range=${timeRange}&format=csv`}
+                    download
+                    onClick={() => setExportOpen(false)}
+                    className="block px-3 py-1.5 rounded-lg hover:bg-slate-800 hover:text-white transition-colors"
+                  >
+                    Events (CSV)
+                  </a>
+                  <a
+                    href={`/api/export/events?site_id=${encodeURIComponent(siteId)}&range=${timeRange}&format=json`}
+                    download
+                    onClick={() => setExportOpen(false)}
+                    className="block px-3 py-1.5 rounded-lg hover:bg-slate-800 hover:text-white transition-colors"
+                  >
+                    Events (JSON)
+                  </a>
+                  <a
+                    href={`/api/export/sessions?site_id=${encodeURIComponent(siteId)}&range=${timeRange}&format=csv`}
+                    download
+                    onClick={() => setExportOpen(false)}
+                    className="block px-3 py-1.5 rounded-lg hover:bg-slate-800 hover:text-white transition-colors"
+                  >
+                    Sessions (CSV)
+                  </a>
+                  <a
+                    href={`/api/export/sessions?site_id=${encodeURIComponent(siteId)}&range=${timeRange}&format=json`}
+                    download
+                    onClick={() => setExportOpen(false)}
+                    className="block px-3 py-1.5 rounded-lg hover:bg-slate-800 hover:text-white transition-colors"
+                  >
+                    Sessions (JSON)
+                  </a>
+                </div>
+              )}
+            </div>
 
             {/* Seed Demo Button */}
             <button
@@ -181,7 +279,7 @@ export function App() {
               className="hidden sm:flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-colors"
             >
               <Database className="w-3.5 h-3.5 text-blue-400" />
-              <span>Seed Data</span>
+              <span>Seed</span>
             </button>
 
             {/* Refresh */}
@@ -196,36 +294,48 @@ export function App() {
         </div>
 
         {/* Mobile Sub-Navigation */}
-        <div className="flex md:hidden items-center justify-around border-t border-slate-800/80 px-2 py-1.5 bg-slate-950 text-xs">
+        <div className="flex lg:hidden items-center justify-around border-t border-slate-800/80 px-2 py-1.5 bg-slate-950 text-xs overflow-x-auto">
           <button
             onClick={() => setActiveTab('overview')}
-            className={`p-1.5 ${activeTab === 'overview' ? 'text-blue-400 font-bold' : 'text-slate-400'}`}
+            className={`p-1.5 whitespace-nowrap ${activeTab === 'overview' ? 'text-blue-400 font-bold' : 'text-slate-400'}`}
           >
             Overview
           </button>
           <button
             onClick={() => setActiveTab('realtime')}
-            className={`p-1.5 ${activeTab === 'realtime' ? 'text-blue-400 font-bold' : 'text-slate-400'}`}
+            className={`p-1.5 whitespace-nowrap ${activeTab === 'realtime' ? 'text-blue-400 font-bold' : 'text-slate-400'}`}
           >
             Realtime
           </button>
           <button
             onClick={() => setActiveTab('funnels')}
-            className={`p-1.5 ${activeTab === 'funnels' ? 'text-blue-400 font-bold' : 'text-slate-400'}`}
+            className={`p-1.5 whitespace-nowrap ${activeTab === 'funnels' ? 'text-blue-400 font-bold' : 'text-slate-400'}`}
           >
             Funnels
           </button>
           <button
             onClick={() => setActiveTab('replays')}
-            className={`p-1.5 ${activeTab === 'replays' ? 'text-blue-400 font-bold' : 'text-slate-400'}`}
+            className={`p-1.5 whitespace-nowrap ${activeTab === 'replays' ? 'text-blue-400 font-bold' : 'text-slate-400'}`}
           >
             Replays
           </button>
           <button
-            onClick={() => setActiveTab('setup')}
-            className={`p-1.5 ${activeTab === 'setup' ? 'text-blue-400 font-bold' : 'text-slate-400'}`}
+            onClick={() => setActiveTab('vitals')}
+            className={`p-1.5 whitespace-nowrap ${activeTab === 'vitals' ? 'text-blue-400 font-bold' : 'text-slate-400'}`}
           >
-            Install
+            Vitals
+          </button>
+          <button
+            onClick={() => setActiveTab('explorer')}
+            className={`p-1.5 whitespace-nowrap ${activeTab === 'explorer' ? 'text-blue-400 font-bold' : 'text-slate-400'}`}
+          >
+            Events
+          </button>
+          <button
+            onClick={() => setActiveTab('setup')}
+            className={`p-1.5 whitespace-nowrap ${activeTab === 'setup' ? 'text-blue-400 font-bold' : 'text-slate-400'}`}
+          >
+            Settings
           </button>
         </div>
       </header>
@@ -300,7 +410,7 @@ export function App() {
                   <h3 className="text-sm font-semibold text-white">Top Pages & Routes</h3>
                   <span className="text-xs text-slate-500">Views</span>
                 </div>
-                {(!metrics?.top_pages || metrics.top_pages.length === 0) ? (
+                {!metrics?.top_pages || metrics.top_pages.length === 0 ? (
                   <div className="py-8 text-center text-xs text-slate-500">No pages recorded yet</div>
                 ) : (
                   <div className="space-y-3">
@@ -328,7 +438,7 @@ export function App() {
                   <h3 className="text-sm font-semibold text-white">Top Referrers</h3>
                   <span className="text-xs text-slate-500">Referrals</span>
                 </div>
-                {(!metrics?.top_referrers || metrics.top_referrers.length === 0) ? (
+                {!metrics?.top_referrers || metrics.top_referrers.length === 0 ? (
                   <div className="py-8 text-center text-xs text-slate-500">No referrer data yet</div>
                 ) : (
                   <div className="space-y-3">
@@ -431,7 +541,13 @@ export function App() {
 
         {/* TAB 3: FUNNELS */}
         {activeTab === 'funnels' && (
-          <FunnelChart onCalculate={calculateFunnel} timeRange={timeRange} />
+          <FunnelChart
+            onCalculate={calculateFunnel}
+            onFetchSavedFunnels={fetchSavedFunnels}
+            onSaveFunnel={saveFunnel}
+            onDeleteSavedFunnel={deleteSavedFunnel}
+            timeRange={timeRange}
+          />
         )}
 
         {/* TAB 4: SESSION REPLAYS */}
@@ -440,16 +556,47 @@ export function App() {
             sessions={sessions}
             total={sessionsTotal}
             onSelectReplay={(sid) => setSelectedReplayId(sid)}
+            onFilterRage={(rageOnly) => fetchSessions(50, 0, rageOnly)}
           />
         )}
 
-        {/* TAB 5: SETUP & INSTALLATION */}
-        {activeTab === 'setup' && <SetupGuide currentSiteId={siteId} />}
+        {/* TAB 5: WEB VITALS */}
+        {activeTab === 'vitals' && (
+          <WebVitalsTab onFetchVitals={fetchWebVitals} timeRange={timeRange} />
+        )}
+
+        {/* TAB 6: EVENT EXPLORER */}
+        {activeTab === 'explorer' && (
+          <EventExplorer onSearchEvents={searchEvents} />
+        )}
+
+        {/* TAB 7: SETUP & SETTINGS */}
+        {activeTab === 'setup' && (
+          <SetupGuide
+            currentSiteId={siteId}
+            onFetchWebhooks={fetchWebhooks}
+            onSaveWebhook={saveWebhook}
+            onDeleteWebhook={deleteWebhook}
+            onTestWebhook={testWebhook}
+          />
+        )}
       </main>
 
       {/* Session Replay Modal */}
       {selectedReplayId && (
         <ReplayModal sessionId={selectedReplayId} onClose={() => setSelectedReplayId(null)} />
+      )}
+
+      {/* Site Management Modal */}
+      {siteModalOpen && (
+        <SiteModal
+          currentSiteId={siteId}
+          onSelectSite={(id) => setSiteId(id)}
+          onClose={() => setSiteModalOpen(false)}
+          onFetchSites={fetchSites}
+          onCreateSite={createSite}
+          onDeleteSite={deleteSite}
+        />
       )}
 
       {/* Footer */}

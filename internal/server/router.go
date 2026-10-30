@@ -35,23 +35,48 @@ func NewRouter(cfg *RouterConfig) http.Handler {
 	mux.HandleFunc("POST /e", cfg.Collector.HandleEvent)
 	mux.HandleFunc("POST /api/replay/chunk", cfg.Collector.HandleReplayChunk)
 
-	// Analytics endpoints
+	// Analytics & Metrics
 	mux.HandleFunc("GET /health", cfg.APIHandler.HandleHealth)
 	mux.HandleFunc("GET /api/metrics", cfg.APIHandler.HandleMetrics)
 	mux.HandleFunc("GET /api/realtime", cfg.APIHandler.HandleRealtime)
 	mux.HandleFunc("GET /api/realtime/stream", cfg.RealtimeTracker.HandleSSE)
 	mux.HandleFunc("POST /api/funnels", cfg.APIHandler.HandleFunnels)
+	mux.HandleFunc("GET /api/funnels/saved", cfg.APIHandler.HandleSavedFunnels)
+	mux.HandleFunc("POST /api/funnels/saved", cfg.APIHandler.HandleSavedFunnels)
+	mux.HandleFunc("DELETE /api/funnels/saved/{id}", cfg.APIHandler.HandleDeleteSavedFunnel)
+
+	// Core Web Vitals & Event Explorer
+	mux.HandleFunc("GET /api/vitals", cfg.APIHandler.HandleWebVitals)
+	mux.HandleFunc("GET /api/events/search", cfg.APIHandler.HandleEventSearch)
+
+	// Sessions & Replays
 	mux.HandleFunc("GET /api/sessions", cfg.APIHandler.HandleSessions)
 	mux.HandleFunc("GET /api/sessions/{id}/replay", cfg.APIHandler.HandleSessionReplay)
-	mux.HandleFunc("POST /api/seed", cfg.APIHandler.HandleSeed)
+
+	// Data Exports (CSV & JSON)
+	mux.HandleFunc("GET /api/export/events", cfg.APIHandler.HandleExportEvents)
+	mux.HandleFunc("GET /api/export/sessions", cfg.APIHandler.HandleExportSessions)
+
+	// Webhooks
+	mux.HandleFunc("GET /api/webhooks", cfg.APIHandler.HandleWebhooks)
+	mux.HandleFunc("POST /api/webhooks", cfg.APIHandler.HandleWebhooks)
+	mux.HandleFunc("DELETE /api/webhooks/{id}", cfg.APIHandler.HandleDeleteWebhook)
+	mux.HandleFunc("POST /api/webhooks/test", cfg.APIHandler.HandleTestWebhook)
+
+	// Sites Management
 	mux.HandleFunc("GET /api/sites", cfg.APIHandler.HandleSites)
+	mux.HandleFunc("POST /api/sites", cfg.APIHandler.HandleSites)
+	mux.HandleFunc("DELETE /api/sites/{id}", cfg.APIHandler.HandleDeleteSite)
+
+	// Database Seeding
+	mux.HandleFunc("POST /api/seed", cfg.APIHandler.HandleSeed)
 
 	// Static & Embedded dashboard handler
 	if cfg.StaticFileFS != nil {
 		fileServer := http.FileServer(cfg.StaticFileFS)
 		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 			path := r.URL.Path
-			// Serve tracker scripts directly with high cache headers if matched
+			// Serve tracker scripts directly with cache headers
 			if path == "/microhog.js" || path == "/microhog-recorder.js" {
 				w.Header().Set("Cache-Control", "public, max-age=3600")
 				fileServer.ServeHTTP(w, r)

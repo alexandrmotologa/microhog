@@ -92,6 +92,14 @@ export interface FunnelResult {
   total_completed: number;
 }
 
+export interface SavedFunnel {
+  id: string;
+  site_id: string;
+  name: string;
+  steps_json: string;
+  created_at: string;
+}
+
 export interface SessionItem {
   id: string;
   site_id: string;
@@ -107,4 +115,44 @@ export interface SessionItem {
   device: string;
   country: string;
   has_replay: boolean;
+  has_rage_click: boolean;
+}
+
+export interface VitalMetric {
+  name: string;
+  p75: number;
+  median: number;
+  rating: 'good' | 'needs_improvement' | 'poor';
+  count: number;
+}
+
+export interface PageVitals {
+  path: string;
+  lcp: number;
+  inp: number;
+  cls: number;
+  count: number;
+}
+
+export interface WebVitalsReport {
+  lcp: VitalMetric;
+  inp: VitalMetric;
+  cls: VitalMetric;
+  pages: PageVitals[];
+}
+
+export interface SiteItem {
+  id: string;
+  name: string;
+  domain: string;
+  created_at: string;
+}
+
+export interface WebhookItem {
+  id: string;
+  site_id: string;
+  name: string;
+  url: string;
+  event_filter: string;
+  created_at: string;
 }

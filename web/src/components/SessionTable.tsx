@@ -1,18 +1,28 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { SessionItem } from '../types/api';
-import { Video, Clock, Layers, Globe, Monitor, Smartphone } from 'lucide-react';
+import { Video, Clock, Layers, Globe, Monitor, Smartphone, AlertOctagon, Filter } from 'lucide-react';
 
 interface SessionTableProps {
   sessions: SessionItem[];
   total: number;
   onSelectReplay: (sessionId: string) => void;
+  onFilterRage?: (rageOnly: boolean) => void;
 }
 
 export const SessionTable: React.FC<SessionTableProps> = ({
   sessions,
   total,
   onSelectReplay,
+  onFilterRage,
 }) => {
+  const [rageFilter, setRageFilter] = useState<boolean>(false);
+
+  const toggleRage = () => {
+    const next = !rageFilter;
+    setRageFilter(next);
+    onFilterRage?.(next);
+  };
+
   const formatDuration = (sec: number) => {
     if (sec < 60) return `${sec}s`;
     const m = Math.floor(sec / 60);
@@ -22,7 +32,7 @@ export const SessionTable: React.FC<SessionTableProps> = ({
 
   return (
     <div className="bg-slate-900/80 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
-      <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+      <div className="p-5 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-base font-bold text-white flex items-center gap-2">
             <Video className="w-4 h-4 text-blue-400" />
@@ -32,14 +42,30 @@ export const SessionTable: React.FC<SessionTableProps> = ({
             Individual user journeys and DOM mutation recordings with automatic PII masking.
           </p>
         </div>
-        <span className="text-xs text-slate-400 bg-slate-800 px-2.5 py-1 rounded-md font-mono">
-          {total} total sessions
-        </span>
+
+        <div className="flex items-center space-x-3">
+          {/* Rage Click Filter Toggle */}
+          <button
+            onClick={toggleRage}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
+              rageFilter
+                ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-sm'
+                : 'bg-slate-800/80 hover:bg-slate-800 text-slate-400 border-slate-700'
+            }`}
+          >
+            <AlertOctagon className="w-3.5 h-3.5 text-rose-400" />
+            <span>Rage Clicks Only</span>
+          </button>
+
+          <span className="text-xs text-slate-400 bg-slate-800 px-2.5 py-1.5 rounded-lg font-mono border border-slate-700">
+            {total} sessions
+          </span>
+        </div>
       </div>
 
       {sessions.length === 0 ? (
         <div className="py-12 text-center text-xs text-slate-500">
-          No sessions recorded yet. Add the tracking script to your web app or click "Seed Demo Data".
+          No sessions recorded yet for this view.
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -47,6 +73,7 @@ export const SessionTable: React.FC<SessionTableProps> = ({
             <thead className="bg-slate-950/60 text-slate-400 border-b border-slate-800 font-semibold uppercase tracking-wider text-[10px]">
               <tr>
                 <th className="py-3 px-4">Visitor / Session</th>
+                <th className="py-3 px-4">Signals</th>
                 <th className="py-3 px-4">Duration</th>
                 <th className="py-3 px-4">Events</th>
                 <th className="py-3 px-4">Journey Path</th>
@@ -65,6 +92,16 @@ export const SessionTable: React.FC<SessionTableProps> = ({
                     <div className="text-[10px] text-slate-500 font-mono mt-0.5">
                       {new Date(s.started_at).toLocaleString()}
                     </div>
+                  </td>
+                  <td className="py-3 px-4">
+                    {s.has_rage_click ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">
+                        <AlertOctagon className="w-3 h-3 text-rose-400" />
+                        Rage Click
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-slate-600 font-mono">-</span>
+                    )}
                   </td>
                   <td className="py-3 px-4">
                     <span className="inline-flex items-center gap-1 font-mono text-slate-300">

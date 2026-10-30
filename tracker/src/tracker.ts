@@ -110,6 +110,40 @@ import { observeVitals, WebVitals } from './vitals';
     });
   }
 
+  // Rage click detection (3+ rapid clicks on the same target within 600ms)
+  let lastClickTarget: HTMLElement | null = null;
+  let lastClickTime = 0;
+  let clickCount = 0;
+  let rageReportedForTarget = false;
+
+  document.addEventListener(
+    'click',
+    (e) => {
+      const now = Date.now();
+      const currentTarget = e.target as HTMLElement;
+
+      if (lastClickTarget === currentTarget && now - lastClickTime < 600) {
+        clickCount++;
+        if (clickCount >= 3 && !rageReportedForTarget) {
+          rageReportedForTarget = true;
+          sendEvent('$rage_click', {
+            target_tag: currentTarget.tagName.toLowerCase(),
+            target_id: currentTarget.id || '',
+            target_class: currentTarget.className || '',
+            target_text: (currentTarget.textContent || '').trim().slice(0, 40),
+            clicks: clickCount,
+          });
+        }
+      } else {
+        lastClickTarget = currentTarget;
+        clickCount = 1;
+        rageReportedForTarget = false;
+      }
+      lastClickTime = now;
+    },
+    true
+  );
+
   // Declarative click tracking & outbound link detection
   document.addEventListener(
     'click',

@@ -10,11 +10,16 @@ MicroHog provides an alternative to complex, multi-service analytics systems. It
 
 - **Single Binary**: Self-contained Go executable with embedded SQLite storage and web user interface. No external dependencies like Kafka, Redis, or ClickHouse.
 - **Cookieless Tracking**: Daily rotating cryptographic salts generate anonymous visitor identifiers. Meets GDPR, CCPA, and PECR standards without consent banners.
-- **Lightweight Tracker**: Core analytics script is under 2 KB uncompressed. Captures pageviews, outbound clicks, and Core Web Vitals (LCP, INP, CLS).
+- **Lightweight Tracker**: Core analytics script is under 2 KB uncompressed. Captures pageviews, clicks, rage click frustration events, and Core Web Vitals.
 - **Session Replay**: Records DOM mutations using rrweb with automatic masking of passwords, credit cards, and specified sensitive elements. Chunks are compressed using Zstandard.
-- **Conversion Funnels**: Computes drop-off rates and completion percentages across sequential user journeys within custom timeframes.
+- **Conversion Funnels & Persistence**: Computes drop-off rates and completion percentages across sequential user journeys with saved funnel persistence.
+- **Frustration & Rage Click Detection**: Detects rapid consecutive clicks on dead or broken elements and flags sessions for quick replay review.
+- **Core Web Vitals Monitoring**: Ingests LCP, INP, and CLS performance metrics with p75 rating breakdowns (Good, Needs Improvement, Poor).
+- **Event Explorer & JSON Inspector**: Real-time event search and inspection modal for debugging custom event properties.
+- **Multi-Site Management**: Create, switch, and manage multiple tracking tokens and domains directly within the dashboard.
+- **Data Export & Portability**: Direct CSV and JSON export endpoints for raw events and session metadata.
+- **Webhook Alerting**: Dispatches HTTP POST notifications to Slack, Discord, or custom endpoints on rage clicks and conversion milestones.
 - **Real-Time Feed**: Live active visitor counts and Server-Sent Events stream for instant inspection.
-- **Multi-Site Support**: Track multiple projects and domains from a single MicroHog instance.
 
 ---
 
